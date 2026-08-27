@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "ai.dxpert/uns-tools",
+  "title": "dxpert.ai — free UNS tools (no API key)",
+  "description": "Free Sparkplug B topic linting, UNS naming checks and AI-readiness screening. No API key.",
+  "version": "0.1.0",
+  "websiteUrl": "https://dxpert.ai",
+  "repository": {
+    "url": "https://github.com/dxpert-ai/uns-tools",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@dxpert/uns-tools",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "DXPERT_API_BASE",
+          "description": "API base URL for the free readiness diagnostic. Defaults to production; override only for testing.",
+          "isRequired": false,
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}

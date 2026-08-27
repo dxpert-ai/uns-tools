@@ -1,0 +1,47 @@
+{
+  "name": "@dxpert/uns-tools",
+  "mcpName": "ai.dxpert/uns-tools",
+  "version": "0.1.0",
+  "description": "No-key stdio MCP server: Sparkplug B topic linting, UNS naming checks, and the free industrial AI-readiness diagnostic from dxpert.ai.",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/server.js",
+  "exports": {
+    ".": "./src/server.js"
+  },
+  "bin": {
+    "dxpert-uns-tools": "bin/uns-tools-mcp.js"
+  },
+  "files": [
+    "src",
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node test/run.js"
+  },
+  "dependencies": {},
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "dxpert",
+    "uns",
+    "unified-namespace",
+    "sparkplug",
+    "sparkplug-b",
+    "mqtt",
+    "isa-95",
+    "industrial-iot",
+    "iiot",
+    "linter",
+    "claude-code",
+    "codex"
+  ],
+  "homepage": "https://dxpert.ai",
+  "author": "DXP Technologies inc. (https://dxpert.ai)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxpert-ai/uns-tools.git"
+  }
+}
