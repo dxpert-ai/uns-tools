@@ -21,6 +21,15 @@ name: Publish to npm
 # The fix is to keep registry-url and delete the _authToken line it wrote,
 # before publishing. Node 24 also matters: node 22 ships npm 10, which cannot do
 # the OIDC handshake at all and produces the same misleading 404.
+#
+# THE ACTUAL ROOT CAUSE, found last and worth naming: npm's trusted publisher
+# for this package had its ENVIRONMENT NAME set to "publish.yml" -- the workflow
+# filename had been entered into both fields. This workflow declares no
+# environment, so the OIDC claim could never match and npm rejected every
+# exchange. npm does not validate that config when you save it, and reports the
+# mismatch as 404 or ENEEDAUTH rather than saying the publisher did not match
+# (npm/cli#9088). If publishing ever fails this way again, check the npm-side
+# config BEFORE touching this file.
 
 on:
   workflow_dispatch:
@@ -55,12 +64,6 @@ jobs:
           else
             echo "No npmrc at $npmrc -- nothing to strip."
           fi
-
-      - name: Is GitHub actually issuing an OIDC token?
-        run: |
-          echo "ACTIONS_ID_TOKEN_REQUEST_URL set:   ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}${ACTIONS_ID_TOKEN_REQUEST_URL:-NO}"
-          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN set: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+yes}${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-NO}"
-          echo "npm version: $(npm --version)"
 
       - name: Test
         run: node test/run.js
