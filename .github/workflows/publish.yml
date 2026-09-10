@@ -29,9 +29,12 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
-          # npm's reference sets this: a release build must never publish from
-          # a warm cache.
+          # No registry-url: setup-node would then write an .npmrc with
+          # //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}, and with no
+          # token set npm authenticates as NOBODY instead of falling back to
+          # OIDC. That is what produced the 404 on PUT, twice. The default
+          # registry is registry.npmjs.org anyway.
+          # A release build must never publish from a warm cache.
           package-manager-cache: false
       - name: Test
         run: node test/run.js
