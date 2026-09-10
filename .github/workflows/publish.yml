@@ -56,6 +56,12 @@ jobs:
             echo "No npmrc at $npmrc -- nothing to strip."
           fi
 
+      - name: Is GitHub actually issuing an OIDC token?
+        run: |
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL set:   ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}${ACTIONS_ID_TOKEN_REQUEST_URL:-NO}"
+          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN set: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+yes}${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-NO}"
+          echo "npm version: $(npm --version)"
+
       - name: Test
         run: node test/run.js
 
