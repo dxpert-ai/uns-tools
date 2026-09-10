@@ -20,9 +20,21 @@ import http from 'http';
 import { spawn } from 'child_process';
 import { once } from 'events';
 
-// The originals, read straight out of the sibling packages...
-import { lintTopic as sourceLintTopic } from '../../sparkplug-topic-lint/src/index.js';
-import { checkNamespace as sourceCheckNamespace } from '../../uns-naming-check/src/index.js';
+// The originals, read straight out of the sibling packages when they are
+// checked out beside this one -- true in the monorepo, false in this
+// standalone repo and in CI. A STATIC import of a path that does not exist
+// aborts the whole file before a single test runs, which is why the publish
+// workflow's `node test/run.js` step could never have passed here. Resolved
+// lazily instead: the parity check runs where it is meaningful and reports
+// itself skipped where it is not.
+let sourceLintTopic = null;
+let sourceCheckNamespace = null;
+try {
+  ({ lintTopic: sourceLintTopic } = await import('../../sparkplug-topic-lint/src/index.js'));
+  ({ checkNamespace: sourceCheckNamespace } = await import('../../uns-naming-check/src/index.js'));
+} catch {
+  // Siblings absent. Handled at the parity section below.
+}
 // ...and the vendored copies this server actually ships with.
 import { lintTopic as vendoredLintTopic } from '../src/sparkplug-topic-lint.js';
 import { checkNamespace as vendoredCheckNamespace } from '../src/uns-naming-check.js';
@@ -123,7 +135,7 @@ const main = connect({ ...process.env, DXPERT_API_BASE: `http://127.0.0.1:${port
 main.send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'test', version: '0' } } });
 let r = await main.next();
 assert.strictEqual(r.result.serverInfo.name, '@dxpert/uns-tools');
-assert.strictEqual(r.result.serverInfo.version, '0.1.0');
+assert.strictEqual(r.result.serverInfo.version, '0.1.1');
 assert.strictEqual(r.result.protocolVersion, '2024-11-05');
 
 main.send({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
@@ -235,20 +247,48 @@ r = await call(main, 11, 'no_such_tool', {});
 assert.ok(r.error);
 assert.match(r.error.message, /unknown tool/);
 
+// --------------------------------------------------- next-step copy (0.1.1)
+// Before 0.1.1 both validators closed by pointing at
+// https://dxpert.ai/tools.html -- the browser version of the tool the caller
+// had just finished running. A loop, not a door. Every install ended there.
+{
+  const failing = textOf(await call(main, 40, 'lint_sparkplug_topic', { topics: 'spBv1.0/Mtl/BADTYPE/Edge-1' }));
+  assert.match(failing, /Next: fix the errors above first/);
+  assert.match(failing, /free account gives 5 runs and takes no card/);
+  assert.match(failing, /store\/signin/);
+
+  const clean = textOf(await call(main, 41, 'lint_sparkplug_topic', { topics: 'spBv1.0/Mtl/DDATA/Edge-1/Press-01' }));
+  assert.match(clean, /Next: these parse/);
+  assert.ok(!/fix the errors above/.test(clean), 'a clean run must not tell the caller to fix errors');
+
+  const namespace = textOf(await call(main, 42, 'check_uns_namespace', { topics: 'Acme/Montreal/Line-1/Press-01' }));
+  assert.match(namespace, /store\/signin/, 'the namespace checker must name the next step too');
+
+  // A locally-run validator is not an audit. The server-side diagnostic
+  // carries the same guard; the packaged copy must not drift away from it.
+  for (const word of ['audit', 'certified', 'guaranteed', 'compliant']) {
+    assert.ok(!new RegExp(word, 'i').test(failing), 'packaged copy must never say ' + word);
+  }
+}
+
 await main.close();
 
 // ================================= 5. parity with the standalone packages
 // The vendored copies must produce byte-identical findings to the packages
 // they were copied from, or the free web tools and this server would disagree.
-assert.deepStrictEqual(
-  badTopics.map((t) => sourceLintTopic(t)),
-  badTopics.map((t) => vendoredLintTopic(t))
-);
-assert.deepStrictEqual(sourceCheckNamespace(badPaths), vendoredCheckNamespace(badPaths));
-// Spot-check that the shared input really is a "bad" one, so parity is not
-// trivially true over two empty result sets.
-assert.ok(sourceLintTopic(badTopics[0]).some((f) => f.kind === 'fail'));
-assert.ok(sourceCheckNamespace(badPaths).some((f) => f.kind === 'fail'));
+if (sourceLintTopic && sourceCheckNamespace) {
+  assert.deepStrictEqual(
+    badTopics.map((t) => sourceLintTopic(t)),
+    badTopics.map((t) => vendoredLintTopic(t))
+  );
+  assert.deepStrictEqual(sourceCheckNamespace(badPaths), vendoredCheckNamespace(badPaths));
+  // Spot-check that the shared input really is a "bad" one, so parity is not
+  // trivially true over two empty result sets.
+  assert.ok(sourceLintTopic(badTopics[0]).some((f) => f.kind === 'fail'));
+  assert.ok(sourceCheckNamespace(badPaths).some((f) => f.kind === 'fail'));
+} else {
+  console.log('skip - source-package parity (siblings not checked out beside this repo)');
+}
 
 // ======================================== 6. NO ENVIRONMENT VARIABLES AT ALL
 // The headline promise: a bare `node bin/uns-tools-mcp.js` with an empty
@@ -272,4 +312,4 @@ assert.strictEqual(seen.length, 1, 'the no-env session must not have called the 
 
 server.close();
 
-console.log('ok - MCP handshake, 3 no-key tools, source-package parity, and a no-env-vars start all passed');
+console.log(`ok - MCP handshake, 3 no-key tools, next-step copy, ${sourceLintTopic ? 'source-package parity, ' : ''}and a no-env-vars start all passed`);

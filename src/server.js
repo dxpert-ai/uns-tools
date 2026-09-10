@@ -13,13 +13,41 @@
  */
 
 import { lintTopic, plainText as plainSparkplug, hasErrors as sparkplugHasErrors } from './sparkplug-topic-lint.js';
-import { checkNamespace, plainText as plainNamespace } from './uns-naming-check.js';
+import { checkNamespace, plainText as plainNamespace, hasErrors as namespaceHasErrors } from './uns-naming-check.js';
 
 const NAME = '@dxpert/uns-tools';
-const VERSION = '0.1.0';
+const VERSION = '0.1.1';
 const DEFAULT_BASE = 'https://opwhcervi3.execute-api.ca-central-1.amazonaws.com';
 const SOURCE_TAG = 'mcp-uns-tools';
 const SOURCE_LINE = 'Source: dxpert.ai';
+const SIGNIN_URL = 'https://dxpert.ai/store/signin';
+
+/**
+ * What follows a validator run.
+ *
+ * These two tools are pure local functions -- they never reach the API, so
+ * unlike the diagnostic they cannot be handed a `next_step` by the server.
+ * Until 0.1.1 they closed by pointing at https://dxpert.ai/tools.html, which
+ * offers the browser version of the tool the caller had just finished running:
+ * a loop, not a door. Every install ended there.
+ *
+ * Shaped like `_diagnostic_next_step` in api/main.py so the two surfaces speak
+ * with one voice: branch on what the run actually found, never claim more than
+ * it measured, and land both branches on the same free, no-card door.
+ *
+ * @param {boolean} clean true when the run found no errors
+ * @returns {string}
+ */
+function nextStep(clean) {
+  return clean
+    ? 'Next: these parse, so an agent can work against a namespace shaped like ' +
+      'this. To have one read your own export, a free account gives 5 runs and ' +
+      `takes no card - ${SIGNIN_URL}`
+    : 'Next: fix the errors above first - naming is the foundation every agent ' +
+      'reads, and no amount of modelling downstream recovers a broken tree. ' +
+      'When it is clean and you want an agent to read your own export, a free ' +
+      `account gives 5 runs and takes no card - ${SIGNIN_URL}`;
+}
 
 const SECTORS = ['discrete_mfg', 'automotive', 'process', 'pharma', 'food_bev', 'energy', 'other'];
 
@@ -153,6 +181,8 @@ function lintSparkplug(args) {
     '',
     ...results.map((r) => `${r.topic}\n${renderFindings(r.findings, plainSparkplug)}`),
     '',
+    nextStep(failing === 0),
+    '',
     `${SOURCE_LINE} (Sparkplug B topic grammar linter, run locally, free - https://dxpert.ai/tools.html)`
   ].join('\n');
   return { text };
@@ -165,6 +195,8 @@ function checkUns(args) {
     `UNS namespace convention check - ${paths.length} path(s).`,
     '',
     renderFindings(findings, plainNamespace),
+    '',
+    nextStep(!namespaceHasErrors(findings)),
     '',
     `${SOURCE_LINE} (UNS naming convention checker, run locally, free - https://dxpert.ai/tools.html)`
   ].join('\n');

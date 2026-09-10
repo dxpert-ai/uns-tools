@@ -3,7 +3,7 @@
   "name": "ai.dxpert/uns-tools",
   "title": "dxpert.ai — free UNS tools (no API key)",
   "description": "Free Sparkplug B topic linting, UNS naming checks and AI-readiness screening. No API key.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "websiteUrl": "https://dxpert.ai",
   "repository": {
     "url": "https://github.com/dxpert-ai/uns-tools",
@@ -13,7 +13,7 @@
     {
       "registryType": "npm",
       "identifier": "@dxpert/uns-tools",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "transport": {
         "type": "stdio"
       },
