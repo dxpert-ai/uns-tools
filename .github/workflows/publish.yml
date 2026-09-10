@@ -1,22 +1,38 @@
 name: Publish to npm
 
+# Publishes with npm TRUSTED PUBLISHING (OIDC). There is no npm token here, in a
+# repo secret, or on anyone's machine -- see oss/RELEASING.md in the monorepo.
+#
+# The v4 actions this replaced could never publish. actions/setup-node@v4 writes
+# an .npmrc containing `//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}`,
+# and with no NODE_AUTH_TOKEN set that resolves to an EMPTY token. npm then
+# authenticates as nobody instead of falling back to OIDC, and the registry
+# answers `404 Not Found - PUT` -- an authorization failure wearing a confusing
+# status code. The giveaway in the log is `npm warn Unknown user config
+# "always-auth"`, which only that generated .npmrc produces, and the complete
+# absence of any OIDC notice before the failure.
+#
+# v6 is what npm's own reference workflow uses. Do not downgrade these pins.
+
 on:
   workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write   # required for OIDC; without it there is no token to exchange
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
-      - name: Use an npm that supports trusted publishing
-        run: npm install -g npm@latest
+          # npm's reference sets this: a release build must never publish from
+          # a warm cache.
+          package-manager-cache: false
       - name: Test
         run: node test/run.js
       - name: Publish
