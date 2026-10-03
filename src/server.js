@@ -9,14 +9,14 @@
  * a real, useful verdict -- and can see who produced it.
  *
  * No runtime dependencies. The MCP stdio JSON-RPC handshake (initialize,
- * tools/list, tools/call) is hand-rolled with Content-Length framing.
+ * tools/list, tools/call) is hand-rolled over newline-delimited JSON (Content-Length framing is also accepted).
  */
 
 import { lintTopic, plainText as plainSparkplug, hasErrors as sparkplugHasErrors } from './sparkplug-topic-lint.js';
 import { checkNamespace, plainText as plainNamespace, hasErrors as namespaceHasErrors } from './uns-naming-check.js';
 
 const NAME = '@dxpert/uns-tools';
-const VERSION = '0.1.1';
+const VERSION = '0.1.2';
 const DEFAULT_BASE = 'https://opwhcervi3.execute-api.ca-central-1.amazonaws.com';
 const SOURCE_TAG = 'mcp-uns-tools';
 const SOURCE_LINE = 'Source: dxpert.ai';
@@ -269,9 +269,37 @@ async function callTool(name, args) {
   throw new Error('unknown tool: ' + name);
 }
 
-function encode(message) {
-  const body = Buffer.from(JSON.stringify(message), 'utf8');
+// MCP stdio is newline-delimited JSON. Content-Length (LSP-style) framing is
+// still accepted for older clients; each reply uses the framing of its request.
+function encode(message, framing = 'line') {
+  const json = JSON.stringify(message);
+  if (framing === 'line') return json + '\n';
+  const body = Buffer.from(json, 'utf8');
   return Buffer.concat([Buffer.from(`Content-Length: ${body.length}\r\n\r\n`, 'ascii'), body]);
+}
+
+const WHITESPACE = new Set([0x09, 0x0a, 0x0d, 0x20]);
+
+// Pops one complete message off the front of `buffer`, or returns null if it
+// is not all here yet. A message starting with `{` is newline-delimited.
+function nextMessage(buffer) {
+  let start = 0;
+  while (start < buffer.length && WHITESPACE.has(buffer[start])) start++;
+  if (start === buffer.length) return { raw: null, rest: Buffer.alloc(0) };
+  if (buffer[start] === 0x7b) {
+    const end = buffer.indexOf(0x0a, start);
+    if (end < 0) return null;
+    return { raw: buffer.slice(start, end).toString('utf8'), rest: buffer.slice(end + 1), framing: 'line' };
+  }
+  const marker = buffer.indexOf('\r\n\r\n', start);
+  if (marker < 0) return null;
+  const header = buffer.slice(start, marker).toString('ascii');
+  const match = /content-length:\s*(\d+)/i.exec(header);
+  if (!match) throw new Error('missing Content-Length header');
+  const bodyStart = marker + 4;
+  const bodyEnd = bodyStart + Number(match[1]);
+  if (buffer.length < bodyEnd) return null;
+  return { raw: buffer.slice(bodyStart, bodyEnd).toString('utf8'), rest: buffer.slice(bodyEnd), framing: 'header' };
 }
 
 function content(result) {
@@ -309,27 +337,23 @@ async function handle(message) {
 
 export function startServer(input = process.stdin, output = process.stdout) {
   let buffer = Buffer.alloc(0);
+  let framing = 'line';
   input.on('data', (chunk) => {
     buffer = Buffer.concat([buffer, chunk]);
     drain().catch((err) => {
-      output.write(encode(errorResponse(null, -32000, err instanceof Error ? err.message : String(err))));
+      output.write(encode(errorResponse(null, -32000, err instanceof Error ? err.message : String(err)), framing));
     });
   });
 
   async function drain() {
     while (true) {
-      const marker = buffer.indexOf('\r\n\r\n');
-      if (marker < 0) return;
-      const header = buffer.slice(0, marker).toString('ascii');
-      const match = /content-length:\s*(\d+)/i.exec(header);
-      if (!match) throw new Error('missing Content-Length header');
-      const length = Number(match[1]);
-      const start = marker + 4;
-      if (buffer.length < start + length) return;
-      const raw = buffer.slice(start, start + length).toString('utf8');
-      buffer = buffer.slice(start + length);
-      const reply = await handle(JSON.parse(raw));
-      if (reply) output.write(encode(reply));
+      const next = nextMessage(buffer);
+      if (!next) return;
+      buffer = next.rest;
+      if (next.raw === null) return;
+      framing = next.framing;
+      const reply = await handle(JSON.parse(next.raw));
+      if (reply) output.write(encode(reply, next.framing));
     }
   }
 }

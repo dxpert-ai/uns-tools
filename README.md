@@ -6,7 +6,7 @@ This is the agent-native equivalent of the free tools page at [dxpert.ai/tools.h
 
 The tools are genuinely free. There is no trial counter, no sign-up wall, and no key to obtain first. If you later want the paid surface — the agents, the Namespace Architect, account-aware advisory — that lives in the separate [`@dxpert/mcp`](https://www.npmjs.com/package/@dxpert/mcp) server, which does take a `dxp_` key.
 
-Zero runtime dependencies. The MCP stdio JSON-RPC handshake (`initialize`, `tools/list`, `tools/call`) is hand-rolled with `Content-Length` framing.
+Zero runtime dependencies. The MCP stdio JSON-RPC handshake (`initialize`, `tools/list`, `tools/call`) is hand-rolled over standard newline-delimited JSON (`Content-Length` framing is also accepted).
 
 ## Install
 

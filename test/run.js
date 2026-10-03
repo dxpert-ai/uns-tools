@@ -135,7 +135,7 @@ const main = connect({ ...process.env, DXPERT_API_BASE: `http://127.0.0.1:${port
 main.send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'test', version: '0' } } });
 let r = await main.next();
 assert.strictEqual(r.result.serverInfo.name, '@dxpert/uns-tools');
-assert.strictEqual(r.result.serverInfo.version, '0.1.1');
+assert.strictEqual(r.result.serverInfo.version, '0.1.2');
 assert.strictEqual(r.result.protocolVersion, '2024-11-05');
 
 main.send({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
@@ -309,6 +309,29 @@ assert.match(out, /Case-collision/);
 await bare.close();
 
 assert.strictEqual(seen.length, 1, 'the no-env session must not have called the network');
+
+// ============================== 7. STANDARD MCP STDIO FRAMING (newline-delimited)
+// Real clients (Claude Code, Codex, the MCP SDK, Glama's mcp-proxy) send one
+// JSON message per line, no Content-Length header. 0.1.1 only spoke
+// Content-Length, so every real client hung on initialize. Never again.
+{
+  const child = spawn(process.execPath, ['bin/uns-tools-mcp.js'], { cwd: packageDir, env: {}, stdio: ['pipe', 'pipe', 'inherit'] });
+  let text = '';
+  child.stdout.on('data', (chunk) => { text += chunk.toString('utf8'); });
+  const init = JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'sdk', version: '0' } } });
+  child.stdin.write(init.slice(0, 20));
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  child.stdin.write(init.slice(20) + '\n' + JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n' + JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list' }) + '\n');
+  for (let i = 0; i < 100 && text.split('\n').filter(Boolean).length < 2; i++) await new Promise((resolve) => setTimeout(resolve, 20));
+  const exit = once(child, 'exit');
+  child.kill();
+  await exit;
+  assert.ok(!/content-length/i.test(text), 'a newline-delimited request must get a newline-delimited reply');
+  const lines = text.split('\n').filter(Boolean).map((line) => JSON.parse(line));
+  assert.strictEqual(lines.length, 2, `expected 2 replies, got: ${text}`);
+  assert.strictEqual(lines[0].result.serverInfo.name, '@dxpert/uns-tools');
+  assert.strictEqual(lines[1].result.tools.length, 3);
+}
 
 server.close();
 
