@@ -135,7 +135,7 @@ const main = connect({ ...process.env, DXPERT_API_BASE: `http://127.0.0.1:${port
 main.send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'test', version: '0' } } });
 let r = await main.next();
 assert.strictEqual(r.result.serverInfo.name, '@dxpert/uns-tools');
-assert.strictEqual(r.result.serverInfo.version, '0.1.2');
+assert.strictEqual(r.result.serverInfo.version, '0.1.3');
 assert.strictEqual(r.result.protocolVersion, '2024-11-05');
 
 main.send({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
@@ -254,7 +254,7 @@ assert.match(r.error.message, /unknown tool/);
 {
   const failing = textOf(await call(main, 40, 'lint_sparkplug_topic', { topics: 'spBv1.0/Mtl/BADTYPE/Edge-1' }));
   assert.match(failing, /Next: fix the errors above first/);
-  assert.match(failing, /free account gives 5 runs and takes no card/);
+  assert.match(failing, /free account includes 5 Try Pro runs on any agent in dxpert Pro and takes no card/);
   assert.match(failing, /store\/signin/);
 
   const clean = textOf(await call(main, 41, 'lint_sparkplug_topic', { topics: 'spBv1.0/Mtl/DDATA/Edge-1/Press-01' }));

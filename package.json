@@ -1,7 +1,7 @@
 {
   "name": "@dxpert/uns-tools",
   "mcpName": "ai.dxpert/uns-tools",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "No-key stdio MCP server: Sparkplug B topic linting, UNS naming checks, and the free industrial AI-readiness diagnostic from dxpert.ai.",
   "license": "MIT",
   "type": "module",

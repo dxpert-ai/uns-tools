@@ -4,7 +4,7 @@
 
 This is the agent-native equivalent of the free tools page at [dxpert.ai/tools.html](https://dxpert.ai/tools.html): any MCP client, with zero credentials, can lint Sparkplug B topics, check a Unified Namespace for the conventions that quietly rot it, and run the public industrial AI-readiness diagnostic.
 
-The tools are genuinely free. There is no trial counter, no sign-up wall, and no key to obtain first. If you later want the paid surface — the agents, the Namespace Architect, account-aware advisory — that lives in the separate [`@dxpert/mcp`](https://www.npmjs.com/package/@dxpert/mcp) server, which does take a `dxp_` key.
+The tools are genuinely free. There is no trial counter, no sign-up wall, and no key to obtain first. When you want an agent to read your own data, that lives in the separate [`@dxpert/mcp`](https://www.npmjs.com/package/@dxpert/mcp) server, which takes a `dxp_` key. A free key includes dxpert Advisor (a monthly question allowance) and Try Pro: 5 runs on any agent included in dxpert Pro. dxpert Pro includes every UNS agent, dxpert Advisor without the monthly count, and the Namespace Architect when it is released. Current plans: [dxpert.ai/store](https://dxpert.ai/store).
 
 Zero runtime dependencies. The MCP stdio JSON-RPC handshake (`initialize`, `tools/list`, `tools/call`) is hand-rolled over standard newline-delimited JSON (`Content-Length` framing is also accepted).
 

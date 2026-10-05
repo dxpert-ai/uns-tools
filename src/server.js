@@ -16,7 +16,7 @@ import { lintTopic, plainText as plainSparkplug, hasErrors as sparkplugHasErrors
 import { checkNamespace, plainText as plainNamespace, hasErrors as namespaceHasErrors } from './uns-naming-check.js';
 
 const NAME = '@dxpert/uns-tools';
-const VERSION = '0.1.2';
+const VERSION = '0.1.3';
 const DEFAULT_BASE = 'https://opwhcervi3.execute-api.ca-central-1.amazonaws.com';
 const SOURCE_TAG = 'mcp-uns-tools';
 const SOURCE_LINE = 'Source: dxpert.ai';
@@ -41,12 +41,13 @@ const SIGNIN_URL = 'https://dxpert.ai/store/signin';
 function nextStep(clean) {
   return clean
     ? 'Next: these parse, so an agent can work against a namespace shaped like ' +
-      'this. To have one read your own export, a free account gives 5 runs and ' +
-      `takes no card - ${SIGNIN_URL}`
+      'this. To have one read your own export, a free account includes 5 Try Pro ' +
+      `runs on any agent in dxpert Pro and takes no card - ${SIGNIN_URL}`
     : 'Next: fix the errors above first - naming is the foundation every agent ' +
       'reads, and no amount of modelling downstream recovers a broken tree. ' +
       'When it is clean and you want an agent to read your own export, a free ' +
-      `account gives 5 runs and takes no card - ${SIGNIN_URL}`;
+      'account includes 5 Try Pro runs on any agent in dxpert Pro and takes no ' +
+      `card - ${SIGNIN_URL}`;
 }
 
 const SECTORS = ['discrete_mfg', 'automotive', 'process', 'pharma', 'food_bev', 'energy', 'other'];
