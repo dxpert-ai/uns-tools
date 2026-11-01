@@ -1,5 +1,7 @@
 # @dxpert/uns-tools
 
+[![M8ven Score](https://m8ven.ai/badge/mcp/dxpert-uns-tools-1qq4d2?v=8a21c5b36d2148962aac68a3c21cc605)](https://m8ven.ai/mcp/dxpert-uns-tools-1qq4d2?s=readme)
+
 **A stdio MCP server that needs no API key, no account, and no environment variables.**
 
 This is the agent-native equivalent of the free tools page at [dxpert.ai/tools.html](https://dxpert.ai/tools.html): any MCP client, with zero credentials, can lint Sparkplug B topics, check a Unified Namespace for the conventions that quietly rot it, and run the public industrial AI-readiness diagnostic.
