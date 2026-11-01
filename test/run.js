@@ -16,6 +16,7 @@
  */
 
 import assert from 'assert';
+import fs from 'fs';
 import http from 'http';
 import { spawn } from 'child_process';
 import { once } from 'events';
@@ -135,7 +136,8 @@ const main = connect({ ...process.env, DXPERT_API_BASE: `http://127.0.0.1:${port
 main.send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'test', version: '0' } } });
 let r = await main.next();
 assert.strictEqual(r.result.serverInfo.name, '@dxpert/uns-tools');
-assert.strictEqual(r.result.serverInfo.version, '0.1.3');
+const pkgVersion = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
+assert.strictEqual(r.result.serverInfo.version, pkgVersion);
 assert.strictEqual(r.result.protocolVersion, '2024-11-05');
 
 main.send({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });

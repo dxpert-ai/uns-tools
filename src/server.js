@@ -16,7 +16,7 @@ import { lintTopic, plainText as plainSparkplug, hasErrors as sparkplugHasErrors
 import { checkNamespace, plainText as plainNamespace, hasErrors as namespaceHasErrors } from './uns-naming-check.js';
 
 const NAME = '@dxpert/uns-tools';
-const VERSION = '0.1.3';
+const VERSION = '0.1.4';
 const DEFAULT_BASE = 'https://opwhcervi3.execute-api.ca-central-1.amazonaws.com';
 const SOURCE_TAG = 'mcp-uns-tools';
 const SOURCE_LINE = 'Source: dxpert.ai';
@@ -55,6 +55,12 @@ const SECTORS = ['discrete_mfg', 'automotive', 'process', 'pharma', 'food_bev', 
 const TOOLS = [
   {
     name: 'lint_sparkplug_topic',
+    annotations: {
+      title: 'Lint MQTT topics against the Sparkplug B grammar',
+      readOnlyHint: true,
+      idempotentHint: true,
+      openWorldHint: false
+    },
     description: [
       'Validate one or more MQTT topic strings against the Sparkplug B topic grammar (Sparkplug 3.0).',
       'Free, no API key, no account: the grammar runs locally inside this server and nothing is sent anywhere.',
@@ -79,6 +85,12 @@ const TOOLS = [
   },
   {
     name: 'check_uns_namespace',
+    annotations: {
+      title: 'Check UNS topic paths for convention problems',
+      readOnlyHint: true,
+      idempotentHint: true,
+      openWorldHint: false
+    },
     description: [
       'Check a set of Unified Namespace (UNS) topic paths for the convention problems that quietly rot a namespace: inconsistent hierarchy depth, mixed casing styles across segments, whitespace in segments, case-collisions between siblings that read as one node but are two, duplicate paths, empty levels, and stray MQTT wildcards.',
       'Free, no API key, no account: the checks run locally inside this server and nothing is sent anywhere.',
@@ -102,6 +114,11 @@ const TOOLS = [
   },
   {
     name: 'run_readiness_diagnostic',
+    annotations: {
+      title: 'Run the public AI-readiness diagnostic',
+      readOnlyHint: true,
+      openWorldHint: true
+    },
     description: [
       'Run the public dxpert.ai industrial AI-readiness diagnostic: a 16-answer self-reported intake in, a scored report out (ten axes 0-5, a maturity stage, the foundation gaps blocking the stated AI ambition, and a confidence value).',
       'Free and requires no API key or account, but unlike the two validators this one DOES call the dxpert.ai API over the network, so it needs connectivity and is rate limited.',
