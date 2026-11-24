@@ -1,6 +1,7 @@
 # @dxpert/uns-tools
 
 [![M8ven Score](https://m8ven.ai/badge/mcp/dxpert-uns-tools-1qq4d2?v=8a21c5b36d2148962aac68a3c21cc605)](https://m8ven.ai/mcp/dxpert-uns-tools-1qq4d2?s=readme)
+[![dxpert-ai/uns-tools MCP server](https://glama.ai/mcp/servers/dxpert-ai/uns-tools/badges/score.svg)](https://glama.ai/mcp/servers/dxpert-ai/uns-tools)
 
 **A stdio MCP server that needs no API key, no account, and no environment variables.**
 
